@@ -15,7 +15,6 @@ import {
 	setDoc,
 	writeBatch,
 } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
 
 const userContext = createContext();
 
@@ -43,7 +42,6 @@ export const UserContextProvider = ({ children }) => {
 	useEffect(() => {
 		onAuthStateChanged(auth, (user) => {
 			if (user) {
-				console.log(user);
 				setUser(user);
 			} else {
 				// User is signed out
@@ -51,9 +49,7 @@ export const UserContextProvider = ({ children }) => {
 				console.log("Signed out user");
 			}
 		});
-
 		getProductsFromFireStore();
-		console.log(products);
 	}, []);
 
 	//SignUp to Firebase
@@ -68,7 +64,7 @@ export const UserContextProvider = ({ children }) => {
 				console.log(user);
 			})
 			.catch((error) => {
-				const errorCode = error.code;
+				// const errorCode = error.code;
 				const errorMessage = error.message;
 				console.log(errorMessage);
 				// ..
@@ -84,7 +80,7 @@ export const UserContextProvider = ({ children }) => {
 				setUser(user);
 			})
 			.catch((error) => {
-				const errorCode = error.code;
+				// const errorCode = error.code;
 				const errorMessage = error.message;
 				console.log(errorMessage);
 			});
@@ -106,21 +102,6 @@ export const UserContextProvider = ({ children }) => {
 		try {
 			// Get a new write batch
 			const batch = writeBatch(db);
-
-			// Set the value of 'NYC'
-			// const nycRef = doc(db, "cities", "NYC");
-			// batch.set(nycRef, { name: "New York City" });
-
-			// // Update the population of 'SF'
-			// const sfRef = doc(db, "cities", "SF");
-			// batch.update(sfRef, { population: 1000000 });
-
-			// // Delete the city 'LA'
-			// const laRef = doc(db, "cities", "LA");
-			// batch.delete(laRef);
-
-			// // Commit the batch
-			// await batch.commit();
 
 			const productss = [
 				{

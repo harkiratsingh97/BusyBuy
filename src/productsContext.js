@@ -1,18 +1,18 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import {
-	getAuth,
-	createUserWithEmailAndPassword,
-	signInWithEmailAndPassword,
-	onAuthStateChanged,
-	signOut,
-} from "firebase/auth";
+// import {
+// 	getAuth,
+// 	createUserWithEmailAndPassword,
+// 	signInWithEmailAndPassword,
+// 	onAuthStateChanged,
+// 	signOut,
+// } from "firebase/auth";
 
 import { db } from "./firebaseInit";
 import {
 	collection,
 	doc,
 	getDocs,
-	setDoc,
+	// setDoc,
 	writeBatch,
 } from "firebase/firestore";
 
@@ -27,17 +27,26 @@ export const useProductsValue = () => {
 export const ProductsContextProvider = ({ children }) => {
 	const [products, setProducts] = useState([]);
 
+	useEffect(() => {
+		getProductsFromFireStore();
+	}, []);
+
+	//Function to get Products from the firestore database
 	const getProductsFromFireStore = async () => {
 		const querySnapshot = await getDocs(collection(db, "products"));
 		querySnapshot.forEach((doc) => {
-			setProducts((prev) => [...prev, doc.data()]);
+			// console.log(doc.id);
+			setProducts((prev) => [...prev, { ...doc.data(), id: doc.id }]);
 		});
 	};
 
-	useEffect(() => {
-		getProductsFromFireStore();
-		console.log(products);
-	}, []);
+	//Function to add a new item in cart of the specified user
+	const addToCartForUser = (prodId, user) => {
+		if (!user) {
+			return;
+		}
+		console.log(prodId, user);
+	};
 
 	//SignUp to Firebase
 
@@ -339,7 +348,6 @@ export const ProductsContextProvider = ({ children }) => {
 				const docRef = doc(collection(db, "products")); // Creating a CollectionReference
 				batch.set(docRef, { ...prod });
 			});
-			console.log(batch);
 
 			await batch.commit();
 			console.log("Products added successfully.");
@@ -354,6 +362,7 @@ export const ProductsContextProvider = ({ children }) => {
 				value={{
 					addProducts,
 					products,
+					addToCartForUser,
 				}}
 			>
 				{children}

@@ -1,10 +1,8 @@
-import { useUserValue } from "../userContext";
 import ProductsCard from "../components/productsCard";
 import { useProductsValue } from "../productsContext";
 
 export const Home = () => {
 	const { products } = useProductsValue();
-	console.log(products);
 	return (
 		<>
 			<br></br>
@@ -17,8 +15,8 @@ export const Home = () => {
 				/>
 				<br></br>
 				<div className="productsWrapper">
-					{products.map((prod) => (
-						<ProductsCard prod={prod} />
+					{products.map((prod, index) => (
+						<ProductsCard key={index} prod={prod} />
 					))}
 				</div>
 			</div>

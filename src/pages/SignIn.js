@@ -3,7 +3,7 @@ import { useUserValue } from "../userContext";
 import { useState } from "react";
 
 export const SignIn = () => {
-	const { signInMethod, addProducts } = useUserValue();
+	const { signInMethod } = useUserValue();
 
 	const [formData, setFormData] = useState({
 		email: "",
