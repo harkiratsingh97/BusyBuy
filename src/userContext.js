@@ -11,7 +11,9 @@ import { db } from "./firebaseInit";
 import {
 	collection,
 	doc,
+	getDoc,
 	getDocs,
+	onSnapshot,
 	setDoc,
 	writeBatch,
 } from "firebase/firestore";
@@ -25,18 +27,17 @@ export const useUserValue = () => {
 };
 
 export const UserContextProvider = ({ children }) => {
-	// const navigate = useNavigate();
 	const [user, setUser] = useState(null);
+	const [userDetails, setUserDetails] = useState(null);
+	const [userDb, setUserDb] = useState(null);
+
 	const [products, setProducts] = useState([]);
 	const auth = getAuth();
-	// var batch = writeBatch(db);
 
 	const getProductsFromFireStore = async () => {
 		const querySnapshot = await getDocs(collection(db, "products"));
 		querySnapshot.forEach((doc) => {
-			// doc.data() is never undefined for query doc snapshots
 			setProducts((prev) => [...prev, doc.data()]);
-			// console.log(doc.id, " => ", doc.data());
 		});
 	};
 	useEffect(() => {
@@ -52,15 +53,71 @@ export const UserContextProvider = ({ children }) => {
 		getProductsFromFireStore();
 	}, []);
 
+	useEffect(() => {
+		if (user) {
+		}
+		getUserExtras();
+	}, [user]);
+
+	//Function to get the extra details of user including cart and orders;
+	const getUserExtras = async () => {
+		if (user) {
+			const q = doc(db, "users", user.uid);
+			const docSnap = await getDoc(q);
+			if (docSnap.exists()) {
+				const userData = docSnap.data();
+				setUserDb(userData);
+				if (userData.cart) {
+					try {
+						const cart = await Promise.all(
+							userData.cart.map(async (val) => {
+								try {
+									const docRef = await getDoc(val.productRef);
+									if (docRef.exists()) {
+										return {
+											...docRef.data(),
+											id: docRef.id,
+											quantity: val.quantity,
+										};
+									} else {
+										console.error("Document does not exist:", val.productRef);
+										return null; // Handle error gracefully
+									}
+								} catch (error) {
+									console.error("Error fetching document:", error);
+									return null; // Handle error gracefully
+								}
+							})
+						);
+						console.log("Cart items:", cart);
+						setUserDetails({
+							uid: user.uid,
+							cart: cart.filter((item) => item !== null),
+							orders: [...docSnap.data().orders],
+						});
+					} catch (error) {
+						console.error("Error fetching cart items:", error);
+						setUserDetails({ uid: user.uid, cart: [] }); // Handle error gracefully
+					}
+				} else {
+					setUserDetails({ uid: user.uid, cart: [] });
+				}
+			} else {
+				console.error("No such document!");
+				setUserDetails({ uid: user.uid, cart: [] }); // Handle error gracefully
+			}
+		}
+	};
+
 	//SignUp to Firebase
 	const signUpMethod = (formData) => {
-		console.log(formData);
+		// console.log(formData);
 		createUserWithEmailAndPassword(auth, formData.email, formData.password)
 			.then((userCredential) => {
 				const user = userCredential.user;
 				setUser(user);
 				const docRef = doc(db, "users", user.uid); // Creating a DocumentReference
-				setDoc(docRef, { cart: [] });
+				setDoc(docRef, { cart: [], orders: [] });
 				console.log(user);
 			})
 			.catch((error) => {
@@ -381,7 +438,6 @@ export const UserContextProvider = ({ children }) => {
 				const docRef = doc(collection(db, "products")); // Creating a CollectionReference
 				batch.set(docRef, { ...prod });
 			});
-			console.log(batch);
 
 			await batch.commit();
 			console.log("Products added successfully.");
@@ -398,8 +454,12 @@ export const UserContextProvider = ({ children }) => {
 					signInMethod,
 					logOut,
 					addProducts,
+					userDetails,
 					user,
 					products,
+					userDb,
+					setUserDb,
+					setUserDetails,
 				}}
 			>
 				{children}

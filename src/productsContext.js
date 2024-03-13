@@ -11,10 +11,13 @@ import { db } from "./firebaseInit";
 import {
 	collection,
 	doc,
+	getDoc,
 	getDocs,
+	setDoc,
 	// setDoc,
 	writeBatch,
 } from "firebase/firestore";
+import { useUserValue } from "./userContext";
 
 const productsContext = createContext();
 
@@ -26,6 +29,8 @@ export const useProductsValue = () => {
 
 export const ProductsContextProvider = ({ children }) => {
 	const [products, setProducts] = useState([]);
+	// const [orderCart, setOrderCart] = useState([]);
+	const { userDetails, setUserDetails, userDb, setUserDb } = useUserValue();
 
 	useEffect(() => {
 		getProductsFromFireStore();
@@ -35,20 +40,130 @@ export const ProductsContextProvider = ({ children }) => {
 	const getProductsFromFireStore = async () => {
 		const querySnapshot = await getDocs(collection(db, "products"));
 		querySnapshot.forEach((doc) => {
-			// console.log(doc.id);
 			setProducts((prev) => [...prev, { ...doc.data(), id: doc.id }]);
 		});
 	};
 
 	//Function to add a new item in cart of the specified user
-	const addToCartForUser = (prodId, user) => {
+	const addToCartForUser = async (prodId, user) => {
 		if (!user) {
 			return;
 		}
 		console.log(prodId, user);
+		const userRef = doc(db, "users", user.uid);
+		const prodRef = doc(db, "products", prodId);
+		const existingProductIndex = userDetails.cart.findIndex(
+			(item) => item.id === prodId
+		);
+
+		// If the product exists, update its quantity
+		if (existingProductIndex > -1) {
+			const updatedCart = [...userDetails.cart];
+			const updatedCartDb = [...userDb.cart];
+
+			updatedCart[existingProductIndex].quantity += 1; // Increase the quantity
+			updatedCartDb[existingProductIndex].quantity += 1; // Increase the quantity
+
+			await setDoc(userRef, { cart: updatedCartDb });
+			setUserDb({ ...userDb, cart: updatedCartDb });
+			setUserDetails({ ...userDetails, cart: updatedCart });
+		} else {
+			// If the product doesn't exist, add it to the cart
+			const otherDocRef = doc(db, "products", prodId);
+
+			await setDoc(userRef, {
+				...userDb,
+				cart: [
+					...userDb.cart,
+					{ id: prodId, quantity: 1, productRef: otherDocRef },
+				],
+			});
+			let addedProd = await getDoc(prodRef);
+			setUserDetails({
+				...userDetails,
+				cart: [
+					...userDetails.cart,
+					{ ...addedProd.data(), id: addedProd.id, quantity: 1 },
+				],
+			});
+			setUserDb({
+				...userDb,
+				cart: [
+					...userDb.cart,
+					{ id: prodId, quantity: 1, productRef: otherDocRef },
+				],
+			});
+		}
 	};
 
-	//SignUp to Firebase
+	//Function to remove an item from cart
+	const removeFromCartForUser = async (prodId, user) => {
+		if (!user) {
+			return;
+		}
+
+		// Get the user document reference
+		const userRef = doc(db, "users", user.uid);
+
+		// Check if the product already exists in the cart
+		const existingProductIndex = userDetails.cart.findIndex(
+			(item) => item.id === prodId
+		);
+
+		console.log(userDetails);
+
+		// If the product exists, update its quantity or remove it if qty is 1
+		if (existingProductIndex !== -1) {
+			const updatedCart = [...userDetails.cart];
+			const updatedCartDb = [...userDb.cart]; // Assuming userDb is also accessible here
+			console.log(updatedCart);
+
+			if (updatedCart[existingProductIndex].quantity === 1) {
+				// If quantity is 1, remove the product from the cart
+				updatedCart.splice(existingProductIndex, 1);
+				updatedCartDb.splice(existingProductIndex, 1); // Remove from userDb as well
+			} else {
+				// Decrease the quantity
+				updatedCart[existingProductIndex].quantity -= 1;
+				updatedCartDb[existingProductIndex].quantity -= 1; // Decrease quantity in userDb as well
+			}
+			console.log(updatedCart);
+
+			// Update the user document with the modified cart array
+			await setDoc(userRef, { ...userDb, cart: updatedCartDb });
+			setUserDb({ ...userDb, cart: updatedCartDb }); // Update userDb state
+			setUserDetails((prevState) => ({
+				...prevState,
+				cart: updatedCart,
+			}));
+		}
+	};
+
+	//Function to order items
+	const orderCart = async () => {
+		if (userDetails.cart.length > 0) {
+			const userRef = doc(db, "users", userDetails.uid);
+			console.log("here");
+			const order = {
+				order: userDetails.cart,
+			};
+			await setDoc(userRef, {
+				...userDb,
+				orders: [...userDb.orders, { date: Date(), ...order }],
+				cart: [],
+			});
+			setUserDb({
+				...userDb,
+				orders: [...userDb.orders, { date: Date(), ...order }],
+				cart: [],
+			});
+			setUserDetails({
+				...userDetails,
+				orders: [...userDb.orders, { date: Date(), ...order }],
+				cart: [],
+			});
+		}
+	};
 
 	const addProducts = async () => {
 		try {
@@ -363,6 +478,8 @@ export const ProductsContextProvider = ({ children }) => {
 					addProducts,
 					products,
 					addToCartForUser,
+					removeFromCartForUser,
+					orderCart,
 				}}
 			>
 				{children}

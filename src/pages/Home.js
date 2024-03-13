@@ -1,8 +1,11 @@
 import ProductsCard from "../components/productsCard";
 import { useProductsValue } from "../productsContext";
+import { useUserValue } from "../userContext";
 
 export const Home = () => {
 	const { products } = useProductsValue();
+	const { userDetails } = useUserValue();
+	console.log(userDetails);
 	return (
 		<>
 			<br></br>

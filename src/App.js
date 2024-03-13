@@ -11,9 +11,10 @@ import { UserContextProvider } from "./userContext";
 import { MyOrders } from "./pages/MyOrders";
 import { SignUp } from "./pages/SignUp";
 import { Cart } from "./pages/Cart";
-import { ProtectedRouteLoggedIn } from "./utils/ProtectedRouteLoggedIn";
+// import { ProtectedRouteLoggedIn } from "./utils/ProtectedRouteLoggedIn";
 import { ProtectedRouteLoggedOut } from "./utils/ProtectedRouteLoggedOut";
 import { ProductsContextProvider } from "./productsContext";
+import { ProtectedRouteLoggedIn } from "./utils/ProtectedRouteLoggedIn";
 
 //Routing Implementation
 const router = createBrowserRouter([
@@ -45,7 +46,7 @@ const router = createBrowserRouter([
 				),
 			},
 			{
-				path: "/",
+				path: "",
 				element: <ProtectedRouteLoggedIn />,
 				children: [
 					{
