@@ -42,7 +42,7 @@ export const UserContextProvider = ({ children }) => {
 	useEffect(() => {
 		onAuthStateChanged(auth, (user) => {
 			if (user) {
-				setUser(user);
+				setUser(user).then();
 			} else {
 				// User is signed out
 				setUser(null);
@@ -50,10 +50,12 @@ export const UserContextProvider = ({ children }) => {
 			}
 		});
 		getProductsFromFireStore();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	useEffect(() => {
 		getUserExtras();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [user]);
 
 	//Function to get the extra details of user including cart and orders;
