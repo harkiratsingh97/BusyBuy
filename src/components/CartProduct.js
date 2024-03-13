@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { useUserValue } from "../userContext";
 import { useProductsValue } from "../productsContext";
 

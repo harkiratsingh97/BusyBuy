@@ -13,7 +13,6 @@ import {
 	doc,
 	getDoc,
 	getDocs,
-	onSnapshot,
 	setDoc,
 	writeBatch,
 } from "firebase/firestore";
@@ -54,8 +53,6 @@ export const UserContextProvider = ({ children }) => {
 	}, []);
 
 	useEffect(() => {
-		if (user) {
-		}
 		getUserExtras();
 	}, [user]);
 

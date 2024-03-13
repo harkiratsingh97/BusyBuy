@@ -1,6 +1,5 @@
 import { CartProduct } from "../components/CartProduct";
-import WrapperFunc from "../components/hoc";
-import ProductsCard from "../components/productsCard";
+
 import { useProductsValue } from "../productsContext";
 import { useUserValue } from "../userContext";
 
@@ -10,15 +9,15 @@ export const Cart = () => {
 	console.log(userDetails);
 	return (
 		<>
-			{userDetails && userDetails.cart.length == 0 && (
-				<div>Nothing in cart</div>
+			{userDetails && userDetails.cart.length === 0 && (
+				<h5 style={{ textAlign: "center", margin: "25px" }}>Nothing in cart</h5>
 			)}
-			{userDetails && userDetails.cart && (
+			{userDetails && userDetails.cart.length > 0 && (
 				<div className="container">
 					<br></br>
 					<div className="cartValueWrapper">
 						<h5>
-							Total Price :{" "}
+							Total Price : ₹ 
 							{parseInt(
 								userDetails.cart.reduce((sum, prod) => {
 									return sum + prod.price * prod.quantity;
